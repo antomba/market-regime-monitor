@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, UTC
 from fredapi import Fred
 import json
 import os
@@ -20,18 +20,27 @@ def safe_download(ticker, period="6mo"):
     if df is None or df.empty:
         return None
 
+    def as_series(value):
+        if isinstance(value, pd.Series):
+            return value
+        if isinstance(value, pd.DataFrame):
+            if value.shape[1] == 0:
+                return None
+            return value.iloc[:, 0]
+        return value
+
     # Case 1: standard columns
     if "Adj Close" in df.columns:
-        return df["Adj Close"]
+        return as_series(df["Adj Close"])
 
     if "Close" in df.columns:
-        return df["Close"]
+        return as_series(df["Close"])
 
     # Case 2: MultiIndex columns (common in GitHub Actions)
     if isinstance(df.columns, pd.MultiIndex):
         for col in ["Adj Close", "Close"]:
             try:
-                return df.xs(col, level=0, axis=1)
+                return as_series(df.xs(col, level=0, axis=1))
             except KeyError:
                 continue
 
@@ -64,6 +73,10 @@ VXMT = safe_download("^VXMT") or (vix * 1.20)
 def last_value(x):
     if isinstance(x, pd.Series):
         return float(x.dropna().iloc[-1])
+    if isinstance(x, pd.DataFrame):
+        if x.shape[1] == 0:
+            raise ValueError("Empty DataFrame passed to last_value")
+        return float(x.iloc[:, 0].dropna().iloc[-1])
     return float(x)
 
 latest = {
@@ -129,7 +142,7 @@ else:
 
 # ---------- 10. OUTPUT ----------
 output = {
-    "date": datetime.utcnow().strftime("%Y-%m-%d"),
+    "date": datetime.now(UTC).strftime("%Y-%m-%d"),
     "values": {k: round(v, 2) for k, v in latest.items()},
     "signals": {
         "multi_vix": multi_vix,
