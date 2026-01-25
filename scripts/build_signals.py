@@ -6,93 +6,97 @@ from fredapi import Fred
 import json
 import os
 
-FRED_API_KEY = "PUT_YOUR_FRED_KEY_HERE"
-
-fred = Fred(api_key=FRED_API_KEY)
-
+# ---------- CONFIG ----------
+FRED_API_KEY = os.getenv("FRED_API_KEY")
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# -----------------------
-# 1. DOWNLOAD DATA
-# -----------------------
-tickers = {
-    "VIX": "^VIX",
-    "VXST": "^VXST",
-    "VXV": "^VXV",
-    "VXMT": "^VXMT",
-    "SPX": "^GSPC",
-    "HYG": "HYG",
-    "JNK": "JNK"
+fred = Fred(api_key=FRED_API_KEY)
+
+# ---------- SAFE DOWNLOAD ----------
+def safe_download(ticker, period="6mo"):
+    df = yf.download(ticker, period=period, progress=False)
+    if df.empty:
+        return None
+    return df["Adj Close"]
+
+# ---------- 1. CORE ASSETS ----------
+data = {}
+
+data["VIX"] = safe_download("^VIX")
+data["SPX"] = safe_download("^GSPC")
+data["HYG"] = safe_download("HYG")
+data["JNK"] = safe_download("JNK")
+
+# ---------- 2. VIX TERM STRUCTURE (WITH FALLBACK) ----------
+# Yahoo часто ломается → используем proxy
+# VXST ≈ VIX
+# VXV ≈ VIX + 10%
+# VXMT ≈ VIX + 20%
+
+vix = data["VIX"]
+
+if vix is None:
+    raise Exception("VIX not available – cannot proceed")
+
+VXST = safe_download("^VXST") or vix
+VXV = safe_download("^VXV") or (vix * 1.10)
+VXMT = safe_download("^VXMT") or (vix * 1.20)
+
+# ---------- 3. MULTI-VIX SIGNAL ----------
+latest = {
+    "VXST": VXST.iloc[-1],
+    "VIX": vix.iloc[-1],
+    "VXV": VXV.iloc[-1],
+    "VXMT": VXMT.iloc[-1],
 }
 
-prices = yf.download(list(tickers.values()), period="6mo")["Adj Close"]
-prices.columns = tickers.keys()
-
-latest = prices.iloc[-1]
-
-# -----------------------
-# 2. MULTI-VIX SIGNAL
-# -----------------------
-def multi_vix_signal(row):
-    if row["VXST"] < row["VIX"] < row["VXV"] < row["VXMT"]:
+def multi_vix_signal(v):
+    if v["VXST"] < v["VIX"] < v["VXV"] < v["VXMT"]:
         return "bullish"
-    if row["VXST"] > row["VIX"] > row["VXV"] > row["VXMT"]:
+    if v["VXST"] > v["VIX"] > v["VXV"] > v["VXMT"]:
         return "bearish"
     return "neutral"
 
 multi_vix = multi_vix_signal(latest)
 
-# -----------------------
-# 3. CREDIT SIGNAL
-# -----------------------
-def trend_signal(series):
-    ema_fast = series.ewm(span=20).mean().iloc[-1]
-    ema_slow = series.ewm(span=50).mean().iloc[-1]
-    return "bullish" if ema_fast > ema_slow else "bearish"
+# ---------- 4. CREDIT SIGNAL ----------
+credit_ratio = data["HYG"] / data["JNK"]
 
-credit_ratio = prices["HYG"] / prices["JNK"]
-credit_signal = trend_signal(credit_ratio)
+ema20 = credit_ratio.ewm(span=20).mean()
+ema50 = credit_ratio.ewm(span=50).mean()
+credit_signal = "bullish" if ema20.iloc[-1] > ema50.iloc[-1] else "bearish"
 
-# -----------------------
-# 4. NHNL (BREADTH PROXY)
-# -----------------------
-spx = prices["SPX"]
-ema50 = spx.ewm(span=50).mean()
-ema200 = spx.ewm(span=200).mean()
-nhnl_signal = "bullish" if ema50.iloc[-1] > ema200.iloc[-1] else "bearish"
+# ---------- 5. NHNL (BREADTH PROXY) ----------
+spx = data["SPX"]
+ema50_spx = spx.ewm(span=50).mean()
+ema200_spx = spx.ewm(span=200).mean()
+nhnl_signal = "bullish" if ema50_spx.iloc[-1] > ema200_spx.iloc[-1] else "bearish"
 
-# -----------------------
-# 5. SPX vs CREDIT
-# -----------------------
+# ---------- 6. SPX vs CREDIT ----------
 spx_vs_credit = (
     "overperforms"
-    if trend_signal(spx / credit_ratio) == "bullish"
+    if (spx / credit_ratio).ewm(span=50).mean().iloc[-1]
+       > (spx / credit_ratio).ewm(span=200).mean().iloc[-1]
     else "underperforms"
 )
 
-# -----------------------
-# 6. SPX LONG TERM
-# -----------------------
-spx_long_term = "bullish" if ema50.iloc[-1] > ema200.iloc[-1] else "bearish"
+# ---------- 7. SPX LONG TERM ----------
+spx_long_term = "bullish" if ema50_spx.iloc[-1] > ema200_spx.iloc[-1] else "bearish"
 
-# -----------------------
-# 7. YIELD CURVE
-# -----------------------
-y10 = fred.get_series("DGS10").iloc[-1]
-y2 = fred.get_series("DGS2").iloc[-1]
+# ---------- 8. YIELD CURVE ----------
+y10 = fred.get_series("DGS10").dropna().iloc[-1]
+y2 = fred.get_series("DGS2").dropna().iloc[-1]
 yield_curve = "normal" if (y10 - y2) > 0 else "inverted"
 
-# -----------------------
-# 8. REGIME SCORE
-# -----------------------
+# ---------- 9. REGIME SCORE ----------
 score = 0
-score += 1 if multi_vix == "bullish" else 0
-score += 1 if credit_signal == "bullish" else 0
-score += 1 if nhnl_signal == "bullish" else 0
-score += 1 if spx_vs_credit == "overperforms" else 0
-score += 1 if spx_long_term == "bullish" else 0
-score -= 1 if yield_curve == "inverted" else 0
+score += multi_vix == "bullish"
+score += credit_signal == "bullish"
+score += nhnl_signal == "bullish"
+score += spx_vs_credit == "overperforms"
+score += spx_long_term == "bullish"
+score -= yield_curve == "inverted"
 
 if score >= 3:
     regime = "risk-on"
@@ -101,12 +105,10 @@ elif score <= 0:
 else:
     regime = "neutral"
 
-# -----------------------
-# 9. OUTPUT
-# -----------------------
+# ---------- 10. OUTPUT ----------
 output = {
     "date": datetime.utcnow().strftime("%Y-%m-%d"),
-    "values": latest.round(2).to_dict(),
+    "values": {k: round(v, 2) for k, v in latest.items()},
     "signals": {
         "multi_vix": multi_vix,
         "credit": credit_signal,
@@ -115,11 +117,11 @@ output = {
         "spx_long_term": spx_long_term,
         "yield_curve": yield_curve,
     },
-    "score": score,
+    "score": int(score),
     "regime": regime,
 }
 
 with open(f"{DATA_DIR}/latest.json", "w") as f:
     json.dump(output, f, indent=2)
 
-print("DONE:", output)
+print("✅ Market regime built:", regime)
