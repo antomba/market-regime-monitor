@@ -61,11 +61,16 @@ VXV = safe_download("^VXV") or (vix * 1.10)
 VXMT = safe_download("^VXMT") or (vix * 1.20)
 
 # ---------- 3. MULTI-VIX SIGNAL ----------
+def last_value(x):
+    if isinstance(x, pd.Series):
+        return float(x.dropna().iloc[-1])
+    return float(x)
+
 latest = {
-    "VXST": VXST.iloc[-1],
-    "VIX": vix.iloc[-1],
-    "VXV": VXV.iloc[-1],
-    "VXMT": VXMT.iloc[-1],
+    "VXST": last_value(VXST),
+    "VIX": last_value(vix),
+    "VXV": last_value(VXV),
+    "VXMT": last_value(VXMT),
 }
 
 def multi_vix_signal(v):
