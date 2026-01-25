@@ -2,7 +2,7 @@ name: Daily Market Regime Update
 
 on:
   schedule:
-    - cron: "0 6 * * 1-5"  # weekdays
+    - cron: "0 18 * * 1-5"  # weekdays
   workflow_dispatch:
 
 permissions:
