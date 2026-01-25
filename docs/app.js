@@ -1,4 +1,4 @@
-fetch("../data/latest.json")
+fetch("data/latest.json")
   .then(r => r.json())
   .then(d => {
     const t = document.getElementById("table");

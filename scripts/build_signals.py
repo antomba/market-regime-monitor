@@ -8,8 +8,9 @@ import os
 
 # ---------- CONFIG ----------
 FRED_API_KEY = os.getenv("FRED_API_KEY")
-DATA_DIR = "data"
-os.makedirs(DATA_DIR, exist_ok=True)
+DATA_DIRS = ["data", "docs/data"]
+for data_dir in DATA_DIRS:
+    os.makedirs(data_dir, exist_ok=True)
 
 fred = Fred(api_key=FRED_API_KEY)
 
@@ -156,7 +157,8 @@ output = {
     "regime": regime,
 }
 
-with open(f"{DATA_DIR}/latest.json", "w") as f:
-    json.dump(output, f, indent=2)
+for data_dir in DATA_DIRS:
+    with open(f"{data_dir}/latest.json", "w") as f:
+        json.dump(output, f, indent=2)
 
 print("✅ Market regime built:", regime)
