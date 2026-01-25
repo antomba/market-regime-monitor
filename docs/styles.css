@@ -1,0 +1,10 @@
+table { border-collapse: collapse; }
+td { padding: 8px; border: 1px solid #ccc; }
+
+.bullish { background: #c8f7c5; }
+.bearish { background: #f7c5c5; }
+.neutral { background: #f7f3c5; }
+.overperforms { background: #c8f7c5; }
+.underperforms { background: #f7c5c5; }
+.normal { background: #c8f7c5; }
+.inverted { background: #f7c5c5; }

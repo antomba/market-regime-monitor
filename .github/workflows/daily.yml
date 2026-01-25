@@ -1,0 +1,35 @@
+name: Daily Market Regime Update
+
+on:
+  schedule:
+    - cron: "0 6 * * 1-5"  # weekdays
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build signals
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          python scripts/build_signals.py
+
+      - name: Commit data
+        run: |
+          git config user.name "bot"
+          git config user.email "bot@github.com"
+          git add data/latest.json
+          git commit -m "daily update" || echo "no changes"
+          git push
