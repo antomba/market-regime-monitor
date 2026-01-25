@@ -16,9 +16,26 @@ fred = Fred(api_key=FRED_API_KEY)
 # ---------- SAFE DOWNLOAD ----------
 def safe_download(ticker, period="6mo"):
     df = yf.download(ticker, period=period, progress=False)
-    if df.empty:
+
+    if df is None or df.empty:
         return None
-    return df["Adj Close"]
+
+    # Case 1: standard columns
+    if "Adj Close" in df.columns:
+        return df["Adj Close"]
+
+    if "Close" in df.columns:
+        return df["Close"]
+
+    # Case 2: MultiIndex columns (common in GitHub Actions)
+    if isinstance(df.columns, pd.MultiIndex):
+        for col in ["Adj Close", "Close"]:
+            try:
+                return df.xs(col, level=0, axis=1)
+            except KeyError:
+                continue
+
+    return None
 
 # ---------- 1. CORE ASSETS ----------
 data = {}
