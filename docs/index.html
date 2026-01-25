@@ -1,54 +1,68 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <title>Market Regime Monitor</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2/css/pico.min.css">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="page container">
-    <header class="hero">
-      <div class="hero__text">
-        <p class="eyebrow">Market Regime Monitor</p>
-        <h1>Signal blend for risk posture and macro pulse.</h1>
-        <p class="subhead">Volatility structure, credit spreads, breadth, and curve shape in one glance.</p>
-      </div>
-      <div class="hero__cards">
-        <div class="card">
-          <p class="card__label">Current Regime</p>
-          <p class="card__value"><span id="regime" class="regime-badge">--</span></p>
-        </div>
-        <div class="card">
-          <p class="card__label">Composite Score</p>
-          <p class="card__value" id="score">--</p>
-        </div>
-        <div class="card">
-          <p class="card__label">As of</p>
-          <p class="card__value" id="date">--</p>
-        </div>
-      </div>
-    </header>
+<html lang="en">
+  <head>
+    <title>Market Regime Monitor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100" style="font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;">
+    <div class="relative overflow-hidden">
+      <div class="pointer-events-none absolute -top-32 left-8 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl"></div>
+      <div class="pointer-events-none absolute -top-24 right-10 h-64 w-64 rounded-full bg-orange-400/25 blur-3xl"></div>
+      <div class="relative mx-auto max-w-5xl px-6 py-12 lg:py-16">
+        <header class="grid gap-6 rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl backdrop-blur lg:grid-cols-[1.3fr_1fr]">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200">Market Regime Monitor</p>
+            <h1 class="mt-4 text-3xl font-semibold leading-tight text-white md:text-4xl">Signal blend for risk posture and macro pulse.</h1>
+            <p class="mt-3 text-base leading-relaxed text-slate-300">Volatility structure, credit spreads, breadth, and curve shape in one glance.</p>
+          </div>
+          <div class="grid gap-4">
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg">
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-300">Current Regime</p>
+              <p class="mt-2 text-lg font-semibold">
+                <span id="regime" class="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-sm font-semibold">--</span>
+              </p>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg">
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-300">Composite Score</p>
+              <p id="score" class="mt-2 text-3xl font-semibold" style="font-family: 'IBM Plex Mono', 'Courier New', monospace;">--</p>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg">
+              <p class="text-xs uppercase tracking-[0.25em] text-slate-300">As of</p>
+              <p id="date" class="mt-2 text-lg font-semibold text-slate-100">--</p>
+            </div>
+          </div>
+        </header>
 
-    <main class="content">
-      <section class="panel">
-        <div class="panel__header">
-          <h2>Signal Map</h2>
-          <p class="panel__meta">Latest daily readout</p>
-        </div>
-        <table id="table">
-          <thead>
-            <tr>
-              <th>Signal</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
-    </main>
-  </div>
-  <script src="app.js"></script>
-</body>
+        <main class="mt-10">
+          <section class="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-xl md:p-8">
+            <div class="flex flex-wrap items-baseline justify-between gap-3">
+              <h2 class="text-xl font-semibold text-white">Signal Map</h2>
+              <p class="text-sm text-slate-300">Latest daily readout</p>
+            </div>
+            <table id="table" class="mt-6 w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs uppercase tracking-[0.22em] text-slate-400">
+                  <th class="pb-3">Signal</th>
+                  <th class="pb-3">Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
 </html>
