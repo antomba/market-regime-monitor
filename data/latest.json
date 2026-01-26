@@ -1,19 +1,19 @@
 {
   "date": "2026-01-26",
   "values": {
-    "VXST": 15.93,
-    "VIX": 15.93,
-    "VXV": 17.52,
-    "VXMT": 19.12
+    "VXST": 14.7,
+    "VIX": 15.83,
+    "VXV": 18.85,
+    "VXMT": 21.44
   },
   "signals": {
-    "multi_vix": "neutral",
+    "multi_vix": "bullish",
     "credit": "bearish",
     "nhnl": "bullish",
     "spx_vs_credit": "overperforms",
     "spx_long_term": "bullish",
     "yield_curve": "normal"
   },
-  "score": 3,
+  "score": 4,
   "regime": "risk-on"
 }
