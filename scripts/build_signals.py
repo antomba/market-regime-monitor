@@ -133,7 +133,19 @@ credit_ratio = data["HYG"] / data["JNK"]
 ema20 = credit_ratio.ewm(span=20).mean()
 ema50 = credit_ratio.ewm(span=50).mean()
 credit_signal = "bullish" if ema20.iloc[-1] > ema50.iloc[-1] else "bearish"
-latest["credit_ratio"] = last_value(credit_ratio)
+
+# ---------- 4a. HYG/JNK TREND ----------
+def trend_signal(series):
+    ema20_s = series.ewm(span=20).mean().iloc[-1]
+    ema50_s = series.ewm(span=50).mean().iloc[-1]
+    if ema20_s > ema50_s:
+        return "bullish"
+    if ema20_s < ema50_s:
+        return "bearish"
+    return "neutral"
+
+hyg_trend = trend_signal(data["HYG"])
+jnk_trend = trend_signal(data["JNK"])
 
 # ---------- 5. NHNL (BREADTH PROXY) ----------
 spx = data["SPX"]
@@ -181,6 +193,8 @@ output = {
     "signals": {
         "multi_vix": multi_vix,
         "credit": credit_signal,
+        "hyg_trend": hyg_trend,
+        "jnk_trend": jnk_trend,
         "nhnl": nhnl_signal,
         "spx_vs_credit": spx_vs_credit,
         "spx_long_term": spx_long_term,
