@@ -1,17 +1,18 @@
 {
   "date": "2026-01-26",
   "values": {
-    "VXST": 14.94,
-    "VIX": 16.05,
-    "VXV": 19.0,
-    "VXMT": 21.56,
+    "VXST": 15.06,
+    "VIX": 16.17,
+    "VXV": 19.07,
+    "VXMT": 21.61,
     "HYG": 81.18,
-    "JNK": 97.93,
-    "credit_ratio": 0.83
+    "JNK": 97.92
   },
   "signals": {
     "multi_vix": "bullish",
     "credit": "bearish",
+    "hyg_trend": "bullish",
+    "jnk_trend": "bullish",
     "nhnl": "bullish",
     "spx_vs_credit": "overperforms",
     "spx_long_term": "bullish",
