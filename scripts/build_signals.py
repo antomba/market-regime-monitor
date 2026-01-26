@@ -65,16 +65,35 @@ vix = data["VIX"]
 if vix is None:
     raise Exception("VIX not available – cannot proceed")
 
-VXST = safe_download("^VXST")
-VXV = safe_download("^VXV")
-VXMT = safe_download("^VXMT")
+
+def download_first_available(candidates, periods=("5d", "1mo", "3mo", "6mo")):
+    """Try a list of Yahoo tickers and periods and return the first non-empty Series."""
+    for period in periods:
+        for t in candidates:
+            s = safe_download(t, period=period)
+            if s is not None and not s.empty:
+                return s
+    return None
+
+
+# Yahoo Finance has historically used different tickers for these Cboe indices.
+# Prefer the currently common tickers, but fall back to the older ones.
+VXST = download_first_available(["^VIX9D", "^VXST"])  # 9-day VIX
+VXV = download_first_available(["^VIX3M", "^VXV"])  # 3-month VIX
+VXMT = download_first_available(["^VIX6M", "^VXMT"])  # 6-month VIX
 
 if VXST is None or VXV is None or VXMT is None:
-    raise Exception("VIX term structure not available – cannot proceed")
+    # Do not hard-fail; proceed with a neutral multi-vix signal.
+    print(
+        "Warning: VIX term structure not fully available; "
+        "multi_vix signal will be set to 'neutral'."
+    )
 
 
 # ---------- 3. MULTI-VIX SIGNAL ----------
 def last_value(x):
+    if x is None:
+        return None
     if isinstance(x, pd.Series):
         return float(x.dropna().iloc[-1])
     if isinstance(x, pd.DataFrame):
@@ -93,6 +112,10 @@ latest = {
 
 
 def multi_vix_signal(v):
+    # If we can't compute the full curve, fall back to missing data.
+    if any(v.get(k) is None for k in ["VXST", "VIX", "VXV", "VXMT"]):
+        return "missing data"
+
     if v["VXST"] < v["VIX"] < v["VXV"] < v["VXMT"]:
         return "bullish"
     if v["VXST"] > v["VIX"] > v["VXV"] > v["VXMT"]:
@@ -151,7 +174,7 @@ else:
 date_str = datetime.now(UTC).strftime("%Y-%m-%d")
 output = {
     "date": date_str,
-    "values": {k: round(v, 2) for k, v in latest.items()},
+    "values": {k: (round(v, 2) if v is not None else None) for k, v in latest.items()},
     "signals": {
         "multi_vix": multi_vix,
         "credit": credit_signal,
