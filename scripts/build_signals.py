@@ -110,7 +110,6 @@ latest = {
     "VXMT": last_value(VXMT),
     "HYG": last_value(data["HYG"]),
     "JNK": last_value(data["JNK"]),
-    "credit_ratio": last_value(credit_ratio),
 }
 
 
@@ -134,6 +133,7 @@ credit_ratio = data["HYG"] / data["JNK"]
 ema20 = credit_ratio.ewm(span=20).mean()
 ema50 = credit_ratio.ewm(span=50).mean()
 credit_signal = "bullish" if ema20.iloc[-1] > ema50.iloc[-1] else "bearish"
+latest["credit_ratio"] = last_value(credit_ratio)
 
 # ---------- 5. NHNL (BREADTH PROXY) ----------
 spx = data["SPX"]
