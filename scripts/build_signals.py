@@ -11,8 +11,10 @@ FRED_API_KEY = os.getenv("FRED_API_KEY")
 DATA_DIRS = ["data", "docs/data"]
 for data_dir in DATA_DIRS:
     os.makedirs(data_dir, exist_ok=True)
+    os.makedirs(os.path.join(data_dir, "history"), exist_ok=True)
 
 fred = Fred(api_key=FRED_API_KEY)
+
 
 # ---------- SAFE DOWNLOAD ----------
 def safe_download(ticker, period="6mo"):
@@ -47,6 +49,7 @@ def safe_download(ticker, period="6mo"):
 
     return None
 
+
 # ---------- 1. CORE ASSETS ----------
 data = {}
 
@@ -70,6 +73,7 @@ VXST = safe_download("^VXST") or vix
 VXV = safe_download("^VXV") or (vix * 1.10)
 VXMT = safe_download("^VXMT") or (vix * 1.20)
 
+
 # ---------- 3. MULTI-VIX SIGNAL ----------
 def last_value(x):
     if isinstance(x, pd.Series):
@@ -80,6 +84,7 @@ def last_value(x):
         return float(x.iloc[:, 0].dropna().iloc[-1])
     return float(x)
 
+
 latest = {
     "VXST": last_value(VXST),
     "VIX": last_value(vix),
@@ -87,12 +92,14 @@ latest = {
     "VXMT": last_value(VXMT),
 }
 
+
 def multi_vix_signal(v):
     if v["VXST"] < v["VIX"] < v["VXV"] < v["VXMT"]:
         return "bullish"
     if v["VXST"] > v["VIX"] > v["VXV"] > v["VXMT"]:
         return "bearish"
     return "neutral"
+
 
 multi_vix = multi_vix_signal(latest)
 
@@ -113,7 +120,7 @@ nhnl_signal = "bullish" if ema50_spx.iloc[-1] > ema200_spx.iloc[-1] else "bearis
 spx_vs_credit = (
     "overperforms"
     if (spx / credit_ratio).ewm(span=50).mean().iloc[-1]
-       > (spx / credit_ratio).ewm(span=200).mean().iloc[-1]
+    > (spx / credit_ratio).ewm(span=200).mean().iloc[-1]
     else "underperforms"
 )
 
@@ -142,8 +149,9 @@ else:
     regime = "neutral"
 
 # ---------- 10. OUTPUT ----------
+date_str = datetime.now(UTC).strftime("%Y-%m-%d")
 output = {
-    "date": datetime.now(UTC).strftime("%Y-%m-%d"),
+    "date": date_str,
     "values": {k: round(v, 2) for k, v in latest.items()},
     "signals": {
         "multi_vix": multi_vix,
@@ -160,5 +168,20 @@ output = {
 for data_dir in DATA_DIRS:
     with open(f"{data_dir}/latest.json", "w") as f:
         json.dump(output, f, indent=2)
-
-print("✅ Market regime built:", regime)
+    history_path = os.path.join(data_dir, "history", f"{date_str}.json")
+    with open(history_path, "w") as f:
+        json.dump(output, f, indent=2)
+    index_path = os.path.join(data_dir, "history", "index.json")
+    if os.path.exists(index_path):
+        try:
+            with open(index_path, "r") as f:
+                index = json.load(f)
+        except json.JSONDecodeError:
+            index = []
+    else:
+        index = []
+    if date_str not in index:
+        index.append(date_str)
+    index = sorted(index)
+    with open(index_path, "w") as f:
+        json.dump(index, f, indent=2)
