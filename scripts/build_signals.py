@@ -108,6 +108,9 @@ latest = {
     "VIX": last_value(vix),
     "VXV": last_value(VXV),
     "VXMT": last_value(VXMT),
+    "HYG": last_value(data["HYG"]),
+    "JNK": last_value(data["JNK"]),
+    "credit_ratio": last_value(credit_ratio),
 }
 
 
