@@ -1,10 +1,10 @@
 {
   "date": "2026-01-26",
   "values": {
-    "VXST": 15.97,
-    "VIX": 15.97,
-    "VXV": 17.57,
-    "VXMT": 19.16
+    "VXST": 15.93,
+    "VIX": 15.93,
+    "VXV": 17.52,
+    "VXMT": 19.12
   },
   "signals": {
     "multi_vix": "neutral",
