@@ -130,10 +130,6 @@ multi_vix = multi_vix_signal(latest)
 # ---------- 4. CREDIT SIGNAL ----------
 credit_ratio = data["HYG"] / data["JNK"]
 
-ema20 = credit_ratio.ewm(span=20).mean()
-ema50 = credit_ratio.ewm(span=50).mean()
-credit_signal = "bullish" if ema20.iloc[-1] > ema50.iloc[-1] else "bearish"
-
 # ---------- 4a. HYG/JNK TREND ----------
 def trend_signal(series):
     ema20_s = series.ewm(span=20).mean().iloc[-1]
@@ -172,7 +168,8 @@ yield_curve = "normal" if (y10 - y2) > 0 else "inverted"
 # ---------- 9. REGIME SCORE ----------
 score = 0
 score += multi_vix == "bullish"
-score += credit_signal == "bullish"
+score += hyg_trend == "bullish"
+score += jnk_trend == "bullish"
 score += nhnl_signal == "bullish"
 score += spx_vs_credit == "overperforms"
 score += spx_long_term == "bullish"
@@ -192,7 +189,6 @@ output = {
     "values": {k: (round(v, 2) if v is not None else None) for k, v in latest.items()},
     "signals": {
         "multi_vix": multi_vix,
-        "credit": credit_signal,
         "hyg_trend": hyg_trend,
         "jnk_trend": jnk_trend,
         "nhnl": nhnl_signal,

@@ -1,6 +1,7 @@
 const labelMap = {
   multi_vix: "Volatility Term Structure",
-  credit: "Credit Risk",
+  hyg_trend: "HYG Trend",
+  jnk_trend: "JNK Trend",
   nhnl: "Breadth (NH/NL)",
   spx_vs_credit: "SPX vs Credit",
   spx_long_term: "SPX Trend",
@@ -9,7 +10,8 @@ const labelMap = {
 
 const tooltipMap = {
   multi_vix: "VXST, VIX, VXV, VXMT curve shape",
-  credit: "Credit spreads vs equities",
+  hyg_trend: "HYG 20/50 EMA trend",
+  jnk_trend: "JNK 20/50 EMA trend",
   nhnl: "New highs vs new lows breadth",
   spx_vs_credit: "Equities relative to credit risk",
   spx_long_term: "SPX vs long-term moving trend",
