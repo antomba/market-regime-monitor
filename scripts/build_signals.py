@@ -58,20 +58,19 @@ data["SPX"] = safe_download("^GSPC")
 data["HYG"] = safe_download("HYG")
 data["JNK"] = safe_download("JNK")
 
-# ---------- 2. VIX TERM STRUCTURE (WITH FALLBACK) ----------
-# Yahoo часто ломается → используем proxy
-# VXST ≈ VIX
-# VXV ≈ VIX + 10%
-# VXMT ≈ VIX + 20%
+# ---------- 2. VIX TERM STRUCTURE ----------
 
 vix = data["VIX"]
 
 if vix is None:
     raise Exception("VIX not available – cannot proceed")
 
-VXST = safe_download("^VXST") or vix
-VXV = safe_download("^VXV") or (vix * 1.10)
-VXMT = safe_download("^VXMT") or (vix * 1.20)
+VXST = safe_download("^VXST")
+VXV = safe_download("^VXV")
+VXMT = safe_download("^VXMT")
+
+if VXST is None or VXV is None or VXMT is None:
+    raise Exception("VIX term structure not available – cannot proceed")
 
 
 # ---------- 3. MULTI-VIX SIGNAL ----------
