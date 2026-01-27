@@ -131,6 +131,7 @@ multi_vix = multi_vix_signal(latest)
 # ---------- 4. CREDIT SIGNAL ----------
 credit_ratio = data["HYG"] / data["JNK"]
 
+
 # ---------- 4a. HYG/JNK TREND ----------
 def trend_signal(series):
     ema20_s = series.ewm(span=20).mean().iloc[-1]
@@ -140,6 +141,7 @@ def trend_signal(series):
     if ema20_s < ema50_s:
         return "bearish"
     return "neutral"
+
 
 hyg_trend = trend_signal(data["HYG"])
 jnk_trend = trend_signal(data["JNK"])
@@ -186,14 +188,6 @@ output = {
 def write_sqlite_snapshot(db_path, payload):
     conn = sqlite3.connect(db_path)
     try:
-        def ensure_columns(table, columns):
-            existing = {
-                row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()
-            }
-            for name, col_type in columns:
-                if name not in existing:
-                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {col_type}")
-
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS signals (
@@ -218,27 +212,9 @@ def write_sqlite_snapshot(db_path, payload):
             )
             """
         )
-        ensure_columns(
-            "signals",
-            [
-                ("vxst", "REAL"),
-                ("vix", "REAL"),
-                ("vxv", "REAL"),
-                ("vxmt", "REAL"),
-                ("hyg", "REAL"),
-                ("jnk", "REAL"),
-                ("multi_vix", "TEXT"),
-                ("hyg_trend", "TEXT"),
-                ("jnk_trend", "TEXT"),
-                ("nhnl", "TEXT"),
-                ("spx_vs_credit", "TEXT"),
-                ("spx_long_term", "TEXT"),
-                ("yield_curve", "TEXT"),
-            ],
-        )
         conn.execute(
             """
-            INSERT INTO signals
+            INSERT OR REPLACE INTO signals
                 (
                     date, vxst, vix, vxv, vxmt, hyg, jnk,
                     multi_vix, hyg_trend, jnk_trend, nhnl, spx_vs_credit,
@@ -246,24 +222,6 @@ def write_sqlite_snapshot(db_path, payload):
                     values_json, signals_json, payload_json, created_at
                 )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(date) DO UPDATE SET
-                vxst = excluded.vxst,
-                vix = excluded.vix,
-                vxv = excluded.vxv,
-                vxmt = excluded.vxmt,
-                hyg = excluded.hyg,
-                jnk = excluded.jnk,
-                multi_vix = excluded.multi_vix,
-                hyg_trend = excluded.hyg_trend,
-                jnk_trend = excluded.jnk_trend,
-                nhnl = excluded.nhnl,
-                spx_vs_credit = excluded.spx_vs_credit,
-                spx_long_term = excluded.spx_long_term,
-                yield_curve = excluded.yield_curve,
-                values_json = excluded.values_json,
-                signals_json = excluded.signals_json,
-                payload_json = excluded.payload_json,
-                created_at = excluded.created_at
             """,
             (
                 payload["date"],
