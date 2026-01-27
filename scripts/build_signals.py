@@ -239,17 +239,3 @@ for data_dir in DATA_DIRS:
     with open(f"{data_dir}/latest.json", "w") as f:
         json.dump(output, f, indent=2)
     write_sqlite_snapshot(os.path.join(data_dir, "history.sqlite"), output)
-    index_path = os.path.join(data_dir, "history", "index.json")
-    if os.path.exists(index_path):
-        try:
-            with open(index_path, "r") as f:
-                index = json.load(f)
-        except json.JSONDecodeError:
-            index = []
-    else:
-        index = []
-    if date_str not in index:
-        index.append(date_str)
-    index = sorted(index)
-    with open(index_path, "w") as f:
-        json.dump(index, f, indent=2)
