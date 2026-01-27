@@ -34,10 +34,8 @@ fetch("data/latest.json")
   .then(r => r.json())
   .then(d => {
     const tbody = document.querySelector("#table tbody");
-    const scoreEl = document.getElementById("score");
     const dateEl = document.getElementById("date");
 
-    scoreEl.innerText = d.score;
     dateEl.innerText = d.date;
 
     Object.entries(d.signals).forEach(([key, value], index) => {
