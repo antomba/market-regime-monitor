@@ -188,6 +188,32 @@ output = {
 def write_sqlite_snapshot(db_path, payload):
     conn = sqlite3.connect(db_path)
     try:
+        # --- schema migration / compatibility ---
+        # GitHub Actions can reuse a persisted sqlite file across runs. If an older
+        # `signals` table exists, it may miss newer columns (e.g. vxst), causing
+        # INSERT to fail. We auto-migrate by adding missing columns.
+        required_cols = {
+            "date": "TEXT PRIMARY KEY",
+            "vxst": "REAL",
+            "vix": "REAL",
+            "vxv": "REAL",
+            "vxmt": "REAL",
+            "hyg": "REAL",
+            "jnk": "REAL",
+            "multi_vix": "TEXT",
+            "hyg_trend": "TEXT",
+            "jnk_trend": "TEXT",
+            "nhnl": "TEXT",
+            "spx_vs_credit": "TEXT",
+            "spx_long_term": "TEXT",
+            "yield_curve": "TEXT",
+            "values_json": "TEXT NOT NULL",
+            "signals_json": "TEXT NOT NULL",
+            "payload_json": "TEXT NOT NULL",
+            "created_at": "TEXT NOT NULL",
+        }
+
+        # Create table if it doesn't exist (fresh run)
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS signals (
@@ -212,6 +238,19 @@ def write_sqlite_snapshot(db_path, payload):
             )
             """
         )
+
+        # If the table existed already, ensure it has all required columns.
+        existing_cols = {
+            row[1] for row in conn.execute("PRAGMA table_info(signals)").fetchall()
+        }
+        for col, col_type in required_cols.items():
+            if col not in existing_cols:
+                # SQLite only supports ADD COLUMN (no IF NOT EXISTS), so we guard.
+                # Primary key can't be added after the fact; but in practice any
+                # existing table already has a date column.
+                if col == "date":
+                    continue
+                conn.execute(f"ALTER TABLE signals ADD COLUMN {col} {col_type}")
         conn.execute(
             """
             INSERT OR REPLACE INTO signals
