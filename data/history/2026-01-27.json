@@ -1,12 +1,12 @@
 {
   "date": "2026-01-27",
   "values": {
-    "VXST": 14.61,
-    "VIX": 15.91,
-    "VXV": 18.82,
-    "VXMT": 21.46,
-    "HYG": 81.21,
-    "JNK": 97.95
+    "VXST": 14.83,
+    "VIX": 16.15,
+    "VXV": 19.02,
+    "VXMT": 21.65,
+    "HYG": 81.15,
+    "JNK": 97.89
   },
   "signals": {
     "multi_vix": "bullish",
@@ -17,6 +17,5 @@
     "spx_long_term": "bullish",
     "yield_curve": "normal"
   },
-  "score": 6,
-  "regime": "risk-on"
+  "score": 6
 }
