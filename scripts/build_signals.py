@@ -5,6 +5,7 @@ from datetime import datetime, UTC
 from fredapi import Fred
 import json
 import os
+import sqlite3
 
 # ---------- CONFIG ----------
 FRED_API_KEY = os.getenv("FRED_API_KEY")
@@ -192,12 +193,52 @@ output = {
     "score": int(score),
 }
 
+
+def write_sqlite_snapshot(db_path, payload):
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS signals (
+                date TEXT PRIMARY KEY,
+                score INTEGER NOT NULL,
+                values_json TEXT NOT NULL,
+                signals_json TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO signals
+                (date, score, values_json, signals_json, payload_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(date) DO UPDATE SET
+                score = excluded.score,
+                values_json = excluded.values_json,
+                signals_json = excluded.signals_json,
+                payload_json = excluded.payload_json,
+                created_at = excluded.created_at
+            """,
+            (
+                payload["date"],
+                payload["score"],
+                json.dumps(payload["values"], separators=(",", ":")),
+                json.dumps(payload["signals"], separators=(",", ":")),
+                json.dumps(payload, separators=(",", ":")),
+                datetime.now(UTC).isoformat(),
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 for data_dir in DATA_DIRS:
     with open(f"{data_dir}/latest.json", "w") as f:
         json.dump(output, f, indent=2)
-    history_path = os.path.join(data_dir, "history", f"{date_str}.json")
-    with open(history_path, "w") as f:
-        json.dump(output, f, indent=2)
+    write_sqlite_snapshot(os.path.join(data_dir, "history.sqlite"), output)
     index_path = os.path.join(data_dir, "history", "index.json")
     if os.path.exists(index_path):
         try:

@@ -2,7 +2,7 @@ market-regime-monitor/
 │
 ├── data/
 │   ├── latest.json        ← ТЕКУЩИЙ СИГНАЛ (для бота)
-│   ├── history.csv        ← ИСТОРИЯ
+│   ├── history.sqlite     ← ИСТОРИЯ (SQLite, daily upserts)
 │
 ├── scripts/
 │   └── build_signals.py   ← Python: данные + логика
