@@ -166,17 +166,7 @@ y10 = fred.get_series("DGS10").dropna().iloc[-1]
 y2 = fred.get_series("DGS2").dropna().iloc[-1]
 yield_curve = "normal" if (y10 - y2) > 0 else "inverted"
 
-# ---------- 9. REGIME SCORE ----------
-score = 0
-score += multi_vix == "bullish"
-score += hyg_trend == "bullish"
-score += jnk_trend == "bullish"
-score += nhnl_signal == "bullish"
-score += spx_vs_credit == "overperforms"
-score += spx_long_term == "bullish"
-score -= yield_curve == "inverted"
-
-# ---------- 10. OUTPUT ----------
+# ---------- 9. OUTPUT ----------
 date_str = datetime.now(UTC).strftime("%Y-%m-%d")
 output = {
     "date": date_str,
@@ -190,18 +180,37 @@ output = {
         "spx_long_term": spx_long_term,
         "yield_curve": yield_curve,
     },
-    "score": int(score),
 }
 
 
 def write_sqlite_snapshot(db_path, payload):
     conn = sqlite3.connect(db_path)
     try:
+        def ensure_columns(table, columns):
+            existing = {
+                row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()
+            }
+            for name, col_type in columns:
+                if name not in existing:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {col_type}")
+
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS signals (
                 date TEXT PRIMARY KEY,
-                score INTEGER NOT NULL,
+                vxst REAL,
+                vix REAL,
+                vxv REAL,
+                vxmt REAL,
+                hyg REAL,
+                jnk REAL,
+                multi_vix TEXT,
+                hyg_trend TEXT,
+                jnk_trend TEXT,
+                nhnl TEXT,
+                spx_vs_credit TEXT,
+                spx_long_term TEXT,
+                yield_curve TEXT,
                 values_json TEXT NOT NULL,
                 signals_json TEXT NOT NULL,
                 payload_json TEXT NOT NULL,
@@ -209,13 +218,48 @@ def write_sqlite_snapshot(db_path, payload):
             )
             """
         )
+        ensure_columns(
+            "signals",
+            [
+                ("vxst", "REAL"),
+                ("vix", "REAL"),
+                ("vxv", "REAL"),
+                ("vxmt", "REAL"),
+                ("hyg", "REAL"),
+                ("jnk", "REAL"),
+                ("multi_vix", "TEXT"),
+                ("hyg_trend", "TEXT"),
+                ("jnk_trend", "TEXT"),
+                ("nhnl", "TEXT"),
+                ("spx_vs_credit", "TEXT"),
+                ("spx_long_term", "TEXT"),
+                ("yield_curve", "TEXT"),
+            ],
+        )
         conn.execute(
             """
             INSERT INTO signals
-                (date, score, values_json, signals_json, payload_json, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+                (
+                    date, vxst, vix, vxv, vxmt, hyg, jnk,
+                    multi_vix, hyg_trend, jnk_trend, nhnl, spx_vs_credit,
+                    spx_long_term, yield_curve,
+                    values_json, signals_json, payload_json, created_at
+                )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(date) DO UPDATE SET
-                score = excluded.score,
+                vxst = excluded.vxst,
+                vix = excluded.vix,
+                vxv = excluded.vxv,
+                vxmt = excluded.vxmt,
+                hyg = excluded.hyg,
+                jnk = excluded.jnk,
+                multi_vix = excluded.multi_vix,
+                hyg_trend = excluded.hyg_trend,
+                jnk_trend = excluded.jnk_trend,
+                nhnl = excluded.nhnl,
+                spx_vs_credit = excluded.spx_vs_credit,
+                spx_long_term = excluded.spx_long_term,
+                yield_curve = excluded.yield_curve,
                 values_json = excluded.values_json,
                 signals_json = excluded.signals_json,
                 payload_json = excluded.payload_json,
@@ -223,7 +267,19 @@ def write_sqlite_snapshot(db_path, payload):
             """,
             (
                 payload["date"],
-                payload["score"],
+                payload["values"].get("VXST"),
+                payload["values"].get("VIX"),
+                payload["values"].get("VXV"),
+                payload["values"].get("VXMT"),
+                payload["values"].get("HYG"),
+                payload["values"].get("JNK"),
+                payload["signals"].get("multi_vix"),
+                payload["signals"].get("hyg_trend"),
+                payload["signals"].get("jnk_trend"),
+                payload["signals"].get("nhnl"),
+                payload["signals"].get("spx_vs_credit"),
+                payload["signals"].get("spx_long_term"),
+                payload["signals"].get("yield_curve"),
                 json.dumps(payload["values"], separators=(",", ":")),
                 json.dumps(payload["signals"], separators=(",", ":")),
                 json.dumps(payload, separators=(",", ":")),
