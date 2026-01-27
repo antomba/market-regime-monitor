@@ -18,11 +18,6 @@ const tooltipMap = {
   yield_curve: "Slope between long and short rates"
 };
 
-const regimeClassMap = {
-  "risk-on": "bg-emerald-400/15 text-emerald-100 border-emerald-300/40",
-  "risk-off": "bg-orange-400/15 text-orange-100 border-orange-300/40"
-};
-
 const statusClassMap = {
   bullish: "bg-emerald-400/15 text-emerald-100 border-emerald-300/40",
   overperforms: "bg-emerald-400/15 text-emerald-100 border-emerald-300/40",
@@ -39,13 +34,9 @@ fetch("data/latest.json")
   .then(r => r.json())
   .then(d => {
     const tbody = document.querySelector("#table tbody");
-    const regimeEl = document.getElementById("regime");
     const scoreEl = document.getElementById("score");
     const dateEl = document.getElementById("date");
-    const regimeBase = regimeEl.className;
 
-    regimeEl.innerText = pretty(d.regime);
-    regimeEl.className = `${regimeBase} ${regimeClassMap[d.regime] || statusClassMap.neutral}`;
     scoreEl.innerText = d.score;
     dateEl.innerText = d.date;
 

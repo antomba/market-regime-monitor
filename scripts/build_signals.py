@@ -175,13 +175,6 @@ score += spx_vs_credit == "overperforms"
 score += spx_long_term == "bullish"
 score -= yield_curve == "inverted"
 
-if score >= 3:
-    regime = "risk-on"
-elif score <= 0:
-    regime = "risk-off"
-else:
-    regime = "neutral"
-
 # ---------- 10. OUTPUT ----------
 date_str = datetime.now(UTC).strftime("%Y-%m-%d")
 output = {
@@ -197,7 +190,6 @@ output = {
         "yield_curve": yield_curve,
     },
     "score": int(score),
-    "regime": regime,
 }
 
 for data_dir in DATA_DIRS:
