@@ -1,15 +1,15 @@
 {
-  "date": "2026-03-03",
+  "date": "2026-03-04",
   "values": {
-    "VXST": 30.81,
-    "VIX": 28.08,
-    "VXV": 26.3,
-    "VXMT": 26.98,
-    "HYG": 79.96,
-    "JNK": 96.23
+    "VXST": 20.64,
+    "VIX": 20.93,
+    "VXV": 22.19,
+    "VXMT": 23.74,
+    "HYG": 80.36,
+    "JNK": 96.75
   },
   "signals": {
-    "multi_vix": "neutral",
+    "multi_vix": "bullish",
     "hyg_trend": "bullish",
     "jnk_trend": "bullish",
     "nhnl": "bullish",
