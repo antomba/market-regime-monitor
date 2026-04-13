@@ -1,17 +1,17 @@
 {
-  "date": "2026-04-09",
+  "date": "2026-04-13",
   "values": {
-    "VXST": 17.59,
-    "VIX": 20.05,
-    "VXV": 22.01,
-    "VXMT": 23.55,
-    "HYG": 80.28,
-    "JNK": 96.62
+    "VXST": 18.74,
+    "VIX": 19.97,
+    "VXV": 22.03,
+    "VXMT": 23.53,
+    "HYG": 80.02,
+    "JNK": 96.29
   },
   "signals": {
     "multi_vix": "bullish",
-    "hyg_trend": "bearish",
-    "jnk_trend": "bearish",
+    "hyg_trend": "bullish",
+    "jnk_trend": "bullish",
     "nhnl": "bearish",
     "spx_vs_credit": "underperforms",
     "spx_long_term": "bearish",
