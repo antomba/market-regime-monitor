@@ -1,15 +1,15 @@
 {
-  "date": "2026-10-20",
+  "date": "2026-10-22",
   "values": {
-    "VXST": 16.48,
-    "VIX": 17.34,
-    "VXV": 18.93,
-    "VXMT": 20.72,
-    "HYG": 76.87,
-    "JNK": 92.26
+    "VXST": 20.12,
+    "VIX": 19.93,
+    "VXV": 20.65,
+    "VXMT": 22.0,
+    "HYG": 77.06,
+    "JNK": 92.5
   },
   "signals": {
-    "multi_vix": "bullish",
+    "multi_vix": "neutral",
     "hyg_trend": "bearish",
     "jnk_trend": "bearish",
     "nhnl": "bullish",
