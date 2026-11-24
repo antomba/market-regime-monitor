@@ -1,12 +1,12 @@
 {
   "date": "2026-11-24",
   "values": {
-    "VXST": 27.76,
-    "VIX": 26.62,
-    "VXV": 25.5,
-    "VXMT": 25.96,
-    "HYG": 76.33,
-    "JNK": 91.54
+    "VXST": 26.68,
+    "VIX": 26.36,
+    "VXV": 25.47,
+    "VXMT": 26.19,
+    "HYG": 76.43,
+    "JNK": 91.69
   },
   "signals": {
     "multi_vix": "neutral",
